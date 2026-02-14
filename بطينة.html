@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valentine Fun</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Cairo:wght@700&display=swap" rel="stylesheet">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(to bottom, #333333, #111111); /* خلفية رمادية مائلة للسواد */
+    color: white;
+}
+
+section {
+    position: absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    padding:20px;
+}
+
+section.active { display:flex; }
+
+h1, p { font-size:28px; margin-bottom:40px; }
+
+button {
+    padding:10px 25px;
+    font-size:18px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+#yes { background:#ff4e8b; color:white; box-shadow:0 0 20px #ff4e8b; }
+#no { background:#444; color:white; position:absolute; }
+
+.random-text {
+    position:absolute;
+    font-size:22px;
+    color: rgba(255,255,255,0.9);
+    font-family: 'Courier New', monospace;
+    z-index:3;
+    pointer-events:none;
+    user-select:none;
+    opacity:0;
+    transition: opacity 1.5s ease;
+}
+
+#loveText {
+    font-size:28px;
+    color:#ffdde0;
+    margin-top:20px;
+    opacity:1;
+    transition: opacity 3s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- الصفحات الافتتاحية -->
+<section id="page1" class="active">
+  <p>عبالي بيك متغششة ماكلاه تكذبي علي و على روحك</p>
+  <button onclick="showPage(2)">انا كذابة ؟؟</button>
+</section>
+
+<section id="page2">
+  <p>قاساتك الهدرة تاعي و نرومالمو مانقولش وش قلت بصح او ندير كلش بش نرضيك مانقدرش نخليك نهار اوخر و انتي زي اك اروحي</p>
+  <button onclick="showPage(3)">امممم</button>
+</section>
+
+<section id="page3">
+  <p>حاب نرجعو كيما كنا توحشتك خلاه احياتي والله نهاري بلا بيك مايفوتش</p>
+  <button onclick="showPage(4)">لا</button>
+</section>
+
+<!-- الصفحة الرئيسية -->
+<section id="page4">
+  <h1>تبطلي التشوكيع و نرجعو ؟</h1>
+  <div id="loveText"></div>
+  <button id="yes">ايه 🙄</button>
+  <button id="no">ماعباليش</button>
+</section>
+
+<canvas id="fireworks"></canvas>
+
+<script>
+/* التنقل بين الصفحات */
+function showPage(num){
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.getElementById('page'+num).classList.add('active');
+}
+
+/* المتغيرات */
+const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const canvas = document.getElementById("fireworks");
+const ctx = canvas.getContext("2d");
+const loveText = document.getElementById("loveText");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+/* قائمة الكلمات */
+const phrases = [
+    "ماكانش لا","🍆","🖕🏻","ازبي نحاولوك ؟","او نيكك","احشمي على روحك","امخلوقة","انمي وشبيك","وشي ماعباليش تاعك"
+];
+let remainingPhrases = [...phrases];
+let canClick = true;
+
+function getNextPhrase(){
+    if(remainingPhrases.length===0) remainingPhrases=[...phrases];
+    return remainingPhrases.shift();
+}
+
+/* حركة زر ماعباليش */
+let lastSide = "";
+function handleNo(){
+    if(!canClick) return; 
+    canClick=false;
+    setTimeout(()=>{canClick=true},1000); // مدة السماح
+
+    const yesRect = yesBtn.getBoundingClientRect();
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
+
+    const sides=["left","right","top","bottom"].filter(s=>s!==lastSide);
+    const side=sides[Math.floor(Math.random()*sides.length)];
+    lastSide=side;
+
+    let newTop,newLeft;
+    switch(side){
+        case"left":
+            newLeft=Math.random()*30; newTop=30+Math.random()*50; break;
+        case"right":
+            newLeft=65+Math.random()*30; newTop=30+Math.random()*50; break;
+        case"top":
+            newTop=15+Math.random()*20; newLeft=30+Math.random()*40; break;
+        case"bottom":
+            newTop=65+Math.random()*25; newLeft=30+Math.random()*40; break;
+    }
+
+    const noLeftPx=newLeft/100*window.innerWidth;
+    const noTopPx=newTop/100*window.innerHeight;
+
+    if(!(noLeftPx<yesRect.right+10 && noLeftPx+btnWidth>yesRect.left-10 &&
+         noTopPx<yesRect.bottom+10 && noTopPx+btnHeight>yesRect.top-10)){
+        noBtn.style.top=newTop+"%";
+        noBtn.style.left=newLeft+"%";
+    }
+
+    // عرض كلمة عشوائية في النصف السفلي
+    const text=document.createElement("div");
+    text.classList.add("random-text");
+    text.innerText=getNextPhrase();
+    const randLeft = 10 + Math.random()*80; 
+    const randTop = 55 + Math.random()*40; 
+    text.style.top=randTop+"%";
+    text.style.left=randLeft+"%";
+    document.body.appendChild(text);
+    setTimeout(()=>{text.style.opacity=1;},50);
+    setTimeout(()=>{text.style.opacity=0;},2000);
+    setTimeout(()=>text.remove(),2500);
+}
+
+noBtn.addEventListener("mouseover", handleNo);
+noBtn.addEventListener("click", handleNo);
+
+/* ألعاب نارية + نص نحبك اروحي عند ايه 🙄 */
+yesBtn.addEventListener("click",()=>{
+    loveText.innerText="نحبك اروحي";
+    loveText.style.opacity=1;
+    setTimeout(()=>{loveText.style.opacity=0;},4500);
+
+    const particles=[];
+    const colors=["#ff0","#ff4e8b","#ff8800","#00ffcc","#00ff88","#6600ff"];
+
+    for(let i=0;i<300;i++){
+        particles.push({
+            x:canvas.width/2,
+            y:canvas.height/2,
+            vx:(Math.random()-0.5)*15,
+            vy:(Math.random()-0.5)*15,
+            color:colors[Math.floor(Math.random()*colors.length)],
+            life:150
+        });
+    }
+
+    function animate(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        let alive=false;
+        for(let p of particles){
+            if(p.life>0){
+                alive=true;
+                ctx.beginPath();
+                ctx.moveTo(p.x,p.y);
+                ctx.lineTo(p.x+p.vx*5,p.y+p.vy*5);
+                ctx.strokeStyle=p.color;
+                ctx.lineWidth=2;
+                ctx.stroke();
+                p.x+=p.vx;
+                p.y+=p.vy;
+                p.vy+=0.1;
+                p.life--;
+            }
+        }
+        if(alive) requestAnimationFrame(animate);
+    }
+    animate();
+});
+</script>
+</body>
+</html>
